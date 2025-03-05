@@ -1,0 +1,78 @@
+# Build directories
+out/
+[Bb]uild/
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+compile_commands.json
+
+# IDE - VSCode
+.vscode/
+*.code-workspace
+
+# IDE - Visual Studio
+.vs/
+*.sln
+*.vcxproj
+*.vcxproj.filters
+*.vcxproj.user
+
+# IDE - JetBrains
+.idea/
+cmake-build-*/
+
+# CMake user presets
+CMakeUserPresets.json
+
+# Prerequisites
+*.d
+
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Fortran module files
+*.mod
+*.smod
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
+*.app
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Debug files
+*.pdb
+*.ilk
+*.exp
+
+# Log files
+*.log
+
+# libraries
+external/
