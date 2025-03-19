@@ -1,5 +1,4 @@
 #include "game.h"
-#include "raylib.h"
 #include <iostream>
 
 const char *Game::SCREEN_TITLE = "Street Fighter 2";
@@ -26,9 +25,10 @@ void Game::initialize()
     m_isRunning = true;
 
     // Initialize raylib window
-    SetConfigFlags(FLAG_WINDOW_RESIZABLE);
+    // SetConfigFlags(FLAG_WINDOW_RESIZABLE);
     InitWindow(m_windowWidth, m_windowHeight, m_windowTitle);
     SetTargetFPS(m_targetFPS);
+    rlImGuiSetup(true);
 
     std::cout << "Core Engine initialized" << std::endl;
 }
@@ -76,6 +76,9 @@ void Game::run()
 
 void Game::shutdown()
 {
+    // Close rlImGui
+    rlImGuiShutdown();
+
     // Close raylib
     CloseAudioDevice();
     CloseWindow();
@@ -102,6 +105,15 @@ void Game::render()
 {
     BeginDrawing();
     ClearBackground(RAYWHITE);
+
+    // start ImGui Content
+    rlImGuiBegin();
+
+    bool open = true;
+    ImGui::ShowDemoWindow(&open);
+
+    // end ImGui Content
+    rlImGuiEnd();
 
     // current scene render
 

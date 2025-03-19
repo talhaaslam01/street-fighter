@@ -5,8 +5,42 @@ project(StreetFighter)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# Set raylib version
+# Set library dependency versions
 set(RAYLIB_VERSION 5.5)
+set(IMGUI_VERSION v1.91.9b)
+set(RLIMGUI_VERSION main)
+
+# External directory for libraries
+set(EXTERNAL_DIR ${CMAKE_SOURCE_DIR}/external)
+
+# Function to download and extract a dependency
+function(download_and_extract NAME URL DIR FOLDER_NAME)
+    set(ARCHIVE "${DIR}.zip")
+    
+    if (NOT EXISTS ${DIR})
+        message(STATUS "Downloading ${NAME} from ${URL}")
+        file(DOWNLOAD ${URL} ${ARCHIVE} SHOW_PROGRESS)
+        
+        # Extract the archive
+        execute_process(COMMAND ${CMAKE_COMMAND} -E tar xzf ${ARCHIVE} WORKING_DIRECTORY ${EXTERNAL_DIR})
+        
+        # Find any folder starting with name ${FOLDER_NAME}
+        file(GLOB LIB_FOLDER "${EXTERNAL_DIR}/${FOLDER_NAME}*")
+
+        # Get the first match (if multiple, take the first one found)
+        list(GET LIB_FOLDER 0 LIB_EXTRACT_DIR)
+
+        # Ensure we found a valid directory
+        if (NOT EXISTS ${LIB_EXTRACT_DIR})
+            message(FATAL_ERROR "${NAME} extracted directory not found in ${EXTERNAL_DIR}")
+        else()
+            # Rename extracted folder (remove version suffix)
+            execute_process(COMMAND ${CMAKE_COMMAND} -E rename ${LIB_EXTRACT_DIR} ${EXTERNAL_DIR}/${FOLDER_NAME})
+        endif()
+
+        file(REMOVE ${ARCHIVE})
+    endif()
+endfunction()
 
 # Set raylib download URL based on OS and compiler
 if (WIN32)
@@ -21,44 +55,34 @@ elseif (UNIX)
     set(RAYLIB_ZIP_URL "https://github.com/raysan5/raylib/releases/download/${RAYLIB_VERSION}/raylib-${RAYLIB_VERSION}_linux_amd64.tar.gz")
 endif()
 
-# Set paths
-set(RAYLIB_DIR ${CMAKE_SOURCE_DIR}/external/raylib)
-set(RAYLIB_ARCHIVE ${CMAKE_SOURCE_DIR}/external/raylib.zip)
+# Set external libraries' paths
+set(RAYLIB_DIR ${EXTERNAL_DIR}/raylib)
+set(IMGUI_DIR ${EXTERNAL_DIR}/imgui)
+set(RLIMGUI_DIR ${EXTERNAL_DIR}/rlImGui)
 
-# Download and extract raylib if not present
-if (NOT EXISTS ${RAYLIB_DIR})
-    message(STATUS "Downloading raylib from ${RAYLIB_ZIP_URL}")
-    file(DOWNLOAD ${RAYLIB_ZIP_URL} ${RAYLIB_ARCHIVE} SHOW_PROGRESS)
+# Download and extract dependencies
+download_and_extract("Raylib" ${RAYLIB_ZIP_URL} ${RAYLIB_DIR} "raylib")
+download_and_extract("Dear ImGui" "https://github.com/ocornut/imgui/archive/refs/tags/${IMGUI_VERSION}.zip" ${IMGUI_DIR} "imgui")
+download_and_extract("rlImGui" "https://github.com/raylib-extras/rlImGui/archive/refs/heads/${RLIMGUI_VERSION}.zip" ${RLIMGUI_DIR} "rlImGui")
 
-    # Extract the archive
-    execute_process(COMMAND ${CMAKE_COMMAND} -E tar xzf ${RAYLIB_ARCHIVE} WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/external)
-
-    # Find any folder named "raylib-*"
-    file(GLOB RAYLIB_FOLDER ${CMAKE_SOURCE_DIR}/external/raylib-*)
-
-    # Get the first match (if multiple, take the first one found)
-    list(GET RAYLIB_FOLDER 0 RAYLIB_EXTRACT_DIR)
-
-    # Ensure we found a valid directory
-    if (NOT EXISTS ${RAYLIB_EXTRACT_DIR})
-        message(FATAL_ERROR "raylib extracted directory not found in external/")
-    endif()
-    
-    # Rename extracted folder (remove version suffix)
-    execute_process(COMMAND ${CMAKE_COMMAND} -E rename ${RAYLIB_EXTRACT_DIR} ${RAYLIB_DIR})
-
-    # Clean up the archive
-    file(REMOVE ${RAYLIB_ARCHIVE})
-endif()
-
-# Include raylib headers
-include_directories(${RAYLIB_DIR}/include)
+# Include libraries' directories
+include_directories(${RAYLIB_DIR}/include ${IMGUI_DIR} ${RLIMGUI_DIR})
 
 # Automatically find all source files in the 'src' directory
 file(GLOB_RECURSE SOURCES src/*.cpp)
 
+# Include ImGui and rlImGui source files
+file(GLOB IMGUI_SOURCES
+    ${IMGUI_DIR}/imgui.cpp
+    ${IMGUI_DIR}/imgui_demo.cpp
+    ${IMGUI_DIR}/imgui_draw.cpp
+    ${IMGUI_DIR}/imgui_tables.cpp
+    ${IMGUI_DIR}/imgui_widgets.cpp)
+file(GLOB RLIMGUI_SOURCES
+    ${RLIMGUI_DIR}/rlImGui.cpp)
+
 # Define the executable
-add_executable(StreetFighter ${SOURCES})
+add_executable(StreetFighter ${SOURCES} ${IMGUI_SOURCES} ${RLIMGUI_SOURCES})
 
 # Detect OS and Compiler
 if (WIN32)
@@ -93,3 +117,10 @@ elseif (CMAKE_CXX_COMPILER_ID MATCHES "GNU")
     message(STATUS "Using GCC Compiler")
     target_compile_options(StreetFighter PRIVATE -Wall -Wextra -Wpedantic)
 endif()
+
+# Copy resources folder to the build directory
+add_custom_target(CopyResources ALL
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+    ${CMAKE_SOURCE_DIR}/resources
+    ${CMAKE_BINARY_DIR}/resources
+)
