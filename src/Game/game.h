@@ -22,24 +22,31 @@ public:
     int getFPS() const { return GetFPS(); }
 
     // Constants
-    static const char *SCREEN_TITLE;
-    static const int SCREEN_WIDTH = 800;
-    static const int SCREEN_HEIGHT = 600;
+    static const char *WINDOW_TITLE;
+    static const int GAME_WIDTH = 384;
+    static const int GAME_HEIGHT = 224;
+    static const int GAME_SCALE_FACTOR = 3;
     static const int TARGET_FPS = 60;
 
 private:
+    void updateScalingRects();
+
     // Core loop functions
     void processInput();
     void update(float dt);
     void fixedUpdate(float fixedDt);
     void render();
 
-    // core properties
+    // Core properties
+    int m_targetFPS;
+    bool m_isRunning;
     int m_windowWidth;
     int m_windowHeight;
     const char *m_windowTitle;
-    int m_targetFPS;
-    bool m_isRunning;
+
+    RenderTexture2D m_gameTexture{};
+    Rectangle m_sourceRect{};
+    Rectangle m_destRect{};
 
     // Time tracking
     float m_deltaTime;
