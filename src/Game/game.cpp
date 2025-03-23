@@ -1,4 +1,4 @@
-#include "game.h"
+#include "Game.h"
 #include <iostream>
 
 const char *Game::WINDOW_TITLE = "Street Fighter 2";
@@ -11,7 +11,11 @@ Game::Game()
       m_windowTitle(WINDOW_TITLE),
       m_deltaTime(0.0f),
       m_totalTime(0.0),
-      m_accumulator(0.0)
+      m_accumulator(0.0),
+      m_stage("Suzaku Castle"),
+      m_camera(GAME_WIDTH, GAME_HEIGHT, m_stage.getBounds()),
+      m_player1(GAME_WIDTH, GAME_HEIGHT, true, m_stage, m_camera.getCamera()),
+      m_player2(GAME_WIDTH, GAME_HEIGHT, false, m_stage, m_camera.getCamera())
 {
 }
 
@@ -25,7 +29,7 @@ void Game::initialize()
     m_isRunning = true;
 
     // Initialize raylib window
-    SetConfigFlags(FLAG_WINDOW_RESIZABLE);
+    SetConfigFlags(FLAG_WINDOW_RESIZABLE | FLAG_WINDOW_MAXIMIZED);
     InitWindow(m_windowWidth, m_windowHeight, m_windowTitle);
     SetWindowMinSize(GAME_WIDTH, GAME_HEIGHT);
     SetTargetFPS(m_targetFPS);
@@ -37,10 +41,13 @@ void Game::initialize()
     rlImGuiSetup(true);
 
     // Create render texture at original resolution
-    m_gameTexture = LoadRenderTexture(GAME_WIDTH, GAME_HEIGHT);
-    // Disable texture filtering for pixel-perfect rendering
+    // And, disable texture filtering for pixel-perfect rendering
     SetTextureFilter(m_gameTexture.texture, TEXTURE_FILTER_POINT);
+    m_gameTexture = LoadRenderTexture(GAME_WIDTH, GAME_HEIGHT);
     updateScalingRects();
+
+    // initialize entities
+    m_stage.load();
 }
 
 void Game::updateScalingRects()
@@ -81,6 +88,7 @@ void Game::run()
     }
 
     // game loop
+    // TODO: fix your timestep
     while (!WindowShouldClose() && m_isRunning)
     {
         if (IsWindowResized())
@@ -136,6 +144,8 @@ void Game::processInput()
 void Game::update(float dt)
 {
     // current scene update
+    m_stage.update(dt);
+    m_camera.update(m_player1.getPosition(), m_player2.getPosition(), dt);
 }
 
 void Game::fixedUpdate(float fixedDt)
@@ -150,10 +160,18 @@ void Game::render()
     {
         ClearBackground(BLACK);
 
-        // Draw all game content here
-        // For example:
-        DrawRectangle(0, 0, GAME_WIDTH, GAME_HEIGHT, GREEN); // A test rectangle at original scale
-        DrawText("Original SF2 Scale", GAME_WIDTH / 2, GAME_HEIGHT / 2, 10, WHITE);
+        // Camera mode rendering goes here
+        BeginMode2D(m_camera.getCamera());
+        {
+            // Draw all game content here
+            m_stage.render(m_camera.getCamera());
+            m_player1.render();
+            m_player2.render();
+            m_camera.render();
+        }
+        EndMode2D();
+
+        // Normal mode rendering goes here
     }
     EndTextureMode();
 
@@ -165,27 +183,39 @@ void Game::render()
         // Draw the scaled game texture
         DrawTexturePro(m_gameTexture.texture, m_sourceRect, m_destRect, {0.0f, 0.0f}, 0.0f, WHITE);
 
-        // Start ImGui Content
-        rlImGuiBegin();
-
-        // bool open = true;
-        // ImGui::ShowDemoWindow(&open);
-
-        ImGui::Begin("Window Info");
-        {
-            ImGui::Text("Game Size: %d x %d", GAME_WIDTH, GAME_HEIGHT);
-            ImGui::Text("Window Size: %d x %d", m_windowWidth, m_windowHeight);
-            ImGui::Text("Game aspect ratio: %.3f", static_cast<float>(GAME_WIDTH) / GAME_HEIGHT);
-            ImGui::Text("Window aspect ratio: %.3f", static_cast<float>(m_windowWidth) / m_windowHeight);
-            ImGui::Text("Time: %.3f", m_totalTime);
-            ImGui::Text("FPS: %d", GetFPS());
-            ImGui::Text("Delta Time: %.6f", m_deltaTime);
-            ImGui::Text("Fixed Delta Time: %.6f", getFixedDeltaTime());
-        }
-        ImGui::End();
+        imGuiDebugRender();
 
         // End ImGui Content
         rlImGuiEnd();
     }
     EndDrawing();
+}
+
+void Game::imGuiDebugRender()
+{
+    // Start ImGui Content
+    rlImGuiBegin();
+
+    bool open = true;
+    ImGui::ShowDemoWindow(&open);
+
+    ImGui::Begin("Window Info");
+    {
+        ImGui::Text("Game Size: %d x %d", GAME_WIDTH, GAME_HEIGHT);
+        ImGui::Text("Window Size: %d x %d", m_windowWidth, m_windowHeight);
+        ImGui::Text("Game aspect ratio: %.3f", static_cast<float>(GAME_WIDTH) / GAME_HEIGHT);
+        ImGui::Text("Window aspect ratio: %.3f", static_cast<float>(m_windowWidth) / m_windowHeight);
+        ImGui::Text("Time: %.3f", m_totalTime);
+        ImGui::Text("FPS: %d", GetFPS());
+        ImGui::Text("Delta Time: %.6f", m_deltaTime);
+        ImGui::Text("Fixed Delta Time: %.6f", getFixedDeltaTime());
+    }
+
+    // add more debug info here
+    m_stage.imguiDebugRender(m_camera);
+    m_camera.imguiDebugRender();
+    m_player1.imGuiDebugRender();
+    m_player2.imGuiDebugRender();
+
+    ImGui::End();
 }

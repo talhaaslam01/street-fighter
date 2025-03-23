@@ -1,5 +1,9 @@
 #pragma once
 
+#include "../Camera/GameCamera.h"
+#include "../Character/Character.h"
+#include "../Stage/Stage.h"
+
 #include "imgui.h"
 #include "raylib.h"
 #include "rlImGui.h"
@@ -36,6 +40,7 @@ private:
     void update(float dt);
     void fixedUpdate(float fixedDt);
     void render();
+    void imGuiDebugRender();
 
     // Core properties
     int m_targetFPS;
@@ -44,6 +49,7 @@ private:
     int m_windowHeight;
     const char *m_windowTitle;
 
+    // Render texture and scaling rectangles
     RenderTexture2D m_gameTexture{};
     Rectangle m_sourceRect{};
     Rectangle m_destRect{};
@@ -52,4 +58,10 @@ private:
     float m_deltaTime;
     double m_totalTime;
     double m_accumulator;
+
+    // entities
+    Stage m_stage;
+    GameCamera m_camera;
+    Character m_player1;
+    Character m_player2;
 };
