@@ -1,0 +1,109 @@
+{
+    // group/action : {loopStartFrameIndex, defaultClsn2, frames}
+    // frame: {offset, frames, clsn1, clsn2}
+    // clsn = [x,y,w,h]
+    "0": {
+        "loopStartFrameIndex": 0,
+        "defaultClsn2": [
+            [0, 0, 0, 0]
+        ],
+        "frames": [
+            {
+                "offset": [0, 0],
+                "frames": 3,
+                "clsn1": [],
+                "clsn2": [
+                    [0, 0, 0, 0]
+                ]
+            },
+            {
+                "offset": [0, 0],
+                "frames": 3,
+                "clsn1": [],
+                "clsn2": [
+                    [0, 0, 0, 0]
+                ]
+            },
+            {
+                "offset": [0, 0],
+                "frames": 3,
+                "clsn1": [],
+                "clsn2": [
+                    [0, 0, 0, 0]
+                ]
+            },
+            {
+                "offset": [0, 0],
+                "frames": 3,
+                "clsn1": [],
+                "clsn2": [
+                    [0, 0, 0, 0]
+                ]
+            },
+            {
+                "offset": [0, 0],
+                "frames": 3,
+                "clsn1": [],
+                "clsn2": [
+                    [0, 0, 0, 0]
+                ]
+            }
+        ]
+    },
+    "20": {
+        "loopStartFrameIndex": 0,
+        "defaultClsn2": [
+            [0, 0, 0, 0]
+        ],
+        "frames": [
+            {
+                "offset": [0, 0],
+                "frames": 3,
+                "clsn1": [],
+                "clsn2": [
+                    [0, 0, 0, 0]
+                ]
+            },
+            {
+                "offset": [0, 0],
+                "frames": 3,
+                "clsn1": [],
+                "clsn2": [
+                    [0, 0, 0, 0]
+                ]
+            },
+            {
+                "offset": [0, 0],
+                "frames": 3,
+                "clsn1": [],
+                "clsn2": [
+                    [0, 0, 0, 0]
+                ]
+            },
+            {
+                "offset": [0, 0],
+                "frames": 3,
+                "clsn1": [],
+                "clsn2": [
+                    [0, 0, 0, 0]
+                ]
+            },
+            {
+                "offset": [0, 0],
+                "frames": 3,
+                "clsn1": [],
+                "clsn2": [
+                    [0, 0, 0, 0]
+                ]
+            },
+            {
+                "offset": [0, 0],
+                "frames": 3,
+                "clsn1": [],
+                "clsn2": [
+                    [0, 0, 0, 0]
+                ]
+            }
+        ]
+    }
+}

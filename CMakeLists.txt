@@ -9,6 +9,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(RAYLIB_VERSION 5.5)
 set(IMGUI_VERSION v1.91.9b)
 set(RLIMGUI_VERSION main)
+set(NLOHMANN_JSON_VERSION 3.11.3)
 
 # External directory for libraries
 set(EXTERNAL_DIR ${CMAKE_SOURCE_DIR}/external)
@@ -59,14 +60,16 @@ endif()
 set(RAYLIB_DIR ${EXTERNAL_DIR}/raylib)
 set(IMGUI_DIR ${EXTERNAL_DIR}/imgui)
 set(RLIMGUI_DIR ${EXTERNAL_DIR}/rlImGui)
+set(NLOHMANN_JSON_DIR ${EXTERNAL_DIR}/json)
 
 # Download and extract dependencies
 download_and_extract("Raylib" ${RAYLIB_ZIP_URL} ${RAYLIB_DIR} "raylib")
 download_and_extract("Dear ImGui" "https://github.com/ocornut/imgui/archive/refs/tags/${IMGUI_VERSION}.zip" ${IMGUI_DIR} "imgui")
 download_and_extract("rlImGui" "https://github.com/raylib-extras/rlImGui/archive/refs/heads/${RLIMGUI_VERSION}.zip" ${RLIMGUI_DIR} "rlImGui")
+download_and_extract("nlohmann_json" "https://github.com/nlohmann/json/archive/refs/tags/v${NLOHMANN_JSON_VERSION}.zip" ${NLOHMANN_JSON_DIR} "json")
 
 # Include libraries' directories
-include_directories(${RAYLIB_DIR}/include ${IMGUI_DIR} ${RLIMGUI_DIR})
+include_directories(${RAYLIB_DIR}/include ${IMGUI_DIR} ${RLIMGUI_DIR} ${NLOHMANN_JSON_DIR}/single_include)
 
 # Automatically find all source files in the 'src' directory
 file(GLOB_RECURSE SOURCES src/*.cpp)

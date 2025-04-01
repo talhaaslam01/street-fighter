@@ -21,7 +21,7 @@ void Stage::load()
     m_floorY = 210.0f;                         // Position of the floor
 
     BackgroundLayer stage;
-    stage.texture = LoadTexture("resources/stages/suzaku_castle.png");
+    stage.texture = LoadTexture("resources/stages/suzakuCastle.png");
     stage.position = {0.0f, 0.0f};
     stage.parallaxFactor = 1.0f;
 

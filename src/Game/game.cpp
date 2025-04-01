@@ -48,6 +48,8 @@ void Game::initialize()
 
     // initialize entities
     m_stage.load();
+    m_player1.initialize();
+    m_player2.initialize();
 }
 
 void Game::updateScalingRects()
@@ -146,11 +148,13 @@ void Game::update(float dt)
     // current scene update
     m_stage.update(dt);
     m_camera.update(m_player1.getPosition(), m_player2.getPosition(), dt);
+    m_player1.update(dt);
 }
 
 void Game::fixedUpdate(float fixedDt)
 {
     // current scene fixed update
+    m_player1.fixedUpdate(fixedDt);
 }
 
 void Game::render()

@@ -50,6 +50,7 @@ void GameCamera::update(const Rectangle p1, const Rectangle p2, float dt)
         m_camera.target.y = Lerp(m_camera.target.y, m_target.y, m_followSpeed * dt);
     }
 
+    // TODO: smooth out the camera movements
     // Deadzone for horizontal movement
     // Convert player positions from world space to screen space
     Vector2 playerOnePos = GetWorldToScreen2D({p1.x, p1.y}, m_camera);
