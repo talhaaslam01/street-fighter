@@ -23,7 +23,7 @@ void SpriteSheetManager::loadSpriteSheet(const char *characterName)
 
 void SpriteSheetManager::loadSpriteSheetMetaData(const char *characterName)
 {
-    const auto filePath = "resources/characters/" + std::string(characterName) + "/sprites.json";
+    const auto filePath = "resources/characters/" + std::string(characterName) + "/sprites.jsonc";
     std::ifstream f(filePath);
     json meta = json::parse(f, nullptr, true, true);
 

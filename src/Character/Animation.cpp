@@ -6,7 +6,7 @@ using json = nlohmann::json;
 
 void AnimationsManager::loadAnimationMetaData(const char *characterName)
 {
-    const auto filePath = "resources/characters/" + std::string(characterName) + "/anims.json";
+    const auto filePath = "resources/characters/" + std::string(characterName) + "/anims.jsonc";
     std::ifstream f(filePath);
     json meta = json::parse(f, nullptr, true, true);
 

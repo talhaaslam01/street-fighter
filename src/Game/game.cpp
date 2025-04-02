@@ -2,9 +2,15 @@
 #include <iostream>
 
 const char *Game::WINDOW_TITLE = "Street Fighter 2";
+const int Game::GAME_WIDTH = 384;
+const int Game::GAME_HEIGHT = 224;
+const int Game::GAME_SCALE_FACTOR = 3;
+const int Game::TARGET_FPS = 60;
+const int Game::TARGET_UPS = 60;
 
 Game::Game()
     : m_targetFPS(TARGET_FPS),
+      m_targetUPS(TARGET_UPS),
       m_isRunning(false),
       m_windowWidth(GAME_WIDTH * GAME_SCALE_FACTOR),
       m_windowHeight(GAME_HEIGHT * GAME_SCALE_FACTOR),
@@ -89,8 +95,9 @@ void Game::run()
         initialize();
     }
 
+    const float fixedDt = getFixedDeltaTime();
+
     // game loop
-    // TODO: fix your timestep
     while (!WindowShouldClose() && m_isRunning)
     {
         if (IsWindowResized())
@@ -102,6 +109,11 @@ void Game::run()
 
         // Calculate delta time
         m_deltaTime = GetFrameTime();
+        if (m_deltaTime > 0.25)
+        {
+            m_deltaTime = 0.25;
+        }
+
         m_totalTime += m_deltaTime;
 
         // process input
@@ -114,14 +126,16 @@ void Game::run()
         m_accumulator += m_deltaTime;
 
         // Fixed update for physics
-        while (m_accumulator >= getFixedDeltaTime())
+        while (m_accumulator >= fixedDt)
         {
-            fixedUpdate(getFixedDeltaTime());
-            m_accumulator -= getFixedDeltaTime();
+            fixedUpdate(fixedDt);
+            m_accumulator -= fixedDt;
         }
 
         // Render frame
-        render();
+        const float alpha = m_accumulator / fixedDt;
+        std::cout << "alpha: " << alpha << std::endl;
+        render(alpha);
     }
 }
 
@@ -157,7 +171,7 @@ void Game::fixedUpdate(float fixedDt)
     m_player1.fixedUpdate(fixedDt);
 }
 
-void Game::render()
+void Game::render(const float alpha)
 {
     // First render the game content at original resolution to the texture
     BeginTextureMode(m_gameTexture);
@@ -188,9 +202,6 @@ void Game::render()
         DrawTexturePro(m_gameTexture.texture, m_sourceRect, m_destRect, {0.0f, 0.0f}, 0.0f, WHITE);
 
         imGuiDebugRender();
-
-        // End ImGui Content
-        rlImGuiEnd();
     }
     EndDrawing();
 }
@@ -214,6 +225,7 @@ void Game::imGuiDebugRender()
         ImGui::Text("Delta Time: %.6f", m_deltaTime);
         ImGui::Text("Fixed Delta Time: %.6f", getFixedDeltaTime());
     }
+    ImGui::End();
 
     // add more debug info here
     m_stage.imguiDebugRender(m_camera);
@@ -221,5 +233,6 @@ void Game::imGuiDebugRender()
     m_player1.imGuiDebugRender();
     m_player2.imGuiDebugRender();
 
-    ImGui::End();
+    // End ImGui Content
+    rlImGuiEnd();
 }
