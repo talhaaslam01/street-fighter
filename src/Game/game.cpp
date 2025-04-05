@@ -21,7 +21,9 @@ Game::Game()
       m_stage("Suzaku Castle"),
       m_camera(GAME_WIDTH, GAME_HEIGHT, m_stage.getBounds()),
       m_player1(GAME_WIDTH, GAME_HEIGHT, true, m_stage, m_camera.getCamera()),
-      m_player2(GAME_WIDTH, GAME_HEIGHT, false, m_stage, m_camera.getCamera())
+      m_player2(GAME_WIDTH, GAME_HEIGHT, false, m_stage, m_camera.getCamera()),
+      m_isPaused(false),
+      m_stepFrame(false)
 {
 }
 
@@ -114,28 +116,36 @@ void Game::run()
             m_deltaTime = 0.25;
         }
 
-        m_totalTime += m_deltaTime;
-
         // process input
         processInput();
 
-        // Update game logic
-        update(m_deltaTime);
-
-        // Accumulator for fixed timestep
-        m_accumulator += m_deltaTime;
-
-        // Fixed update for physics
-        while (m_accumulator >= fixedDt)
+        if (!m_isPaused || m_stepFrame) // Allow updates if not paused or stepping
         {
-            fixedUpdate(fixedDt);
-            m_accumulator -= fixedDt;
+            // Update elapsed time
+            m_totalTime += m_deltaTime;
+
+            // Update game logic
+            update(m_deltaTime);
+
+            // Accumulator for fixed timestep
+            m_accumulator += m_deltaTime;
+
+            // Fixed update for physics
+            while (m_accumulator >= fixedDt)
+            {
+                fixedUpdate(fixedDt);
+                m_accumulator -= fixedDt;
+            }
         }
 
         // Render frame
         const float alpha = m_accumulator / fixedDt;
-        std::cout << "alpha: " << alpha << std::endl;
         render(alpha);
+
+        if (m_stepFrame)
+        {
+            m_stepFrame = false;
+        }
     }
 }
 
@@ -155,6 +165,15 @@ void Game::shutdown()
 void Game::processInput()
 {
     // current scene process input
+    if (IsKeyPressed(KEY_P))
+    {
+        m_isPaused = !m_isPaused;
+    }
+
+    if (IsKeyPressed(KEY_N) && m_isPaused)
+    {
+        m_stepFrame = true;
+    }
 }
 
 void Game::update(float dt)
@@ -174,6 +193,7 @@ void Game::fixedUpdate(float fixedDt)
 void Game::render(const float alpha)
 {
     // First render the game content at original resolution to the texture
+    // TODO: Add rendering interpolation for smooth transitions
     BeginTextureMode(m_gameTexture);
     {
         ClearBackground(BLACK);
@@ -224,6 +244,7 @@ void Game::imGuiDebugRender()
         ImGui::Text("FPS: %d", GetFPS());
         ImGui::Text("Delta Time: %.6f", m_deltaTime);
         ImGui::Text("Fixed Delta Time: %.6f", getFixedDeltaTime());
+        ImGui::Text("Paused: %s", m_isPaused ? "true" : "false");
     }
     ImGui::End();
 

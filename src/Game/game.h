@@ -65,4 +65,8 @@ private:
     GameCamera m_camera;
     Character m_player1;
     Character m_player2;
+
+    // frame by frame debugging
+    int m_isPaused;
+    int m_stepFrame;
 };
