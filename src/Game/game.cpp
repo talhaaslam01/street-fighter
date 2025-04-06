@@ -6,11 +6,9 @@ const int Game::GAME_WIDTH = 384;
 const int Game::GAME_HEIGHT = 224;
 const int Game::GAME_SCALE_FACTOR = 3;
 const int Game::TARGET_FPS = 60;
-const int Game::TARGET_UPS = 60;
 
 Game::Game()
     : m_targetFPS(TARGET_FPS),
-      m_targetUPS(TARGET_UPS),
       m_isRunning(false),
       m_windowWidth(GAME_WIDTH * GAME_SCALE_FACTOR),
       m_windowHeight(GAME_HEIGHT * GAME_SCALE_FACTOR),

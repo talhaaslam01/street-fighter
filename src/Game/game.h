@@ -21,7 +21,7 @@ public:
 
     // Time management
     float getDeltaTime() const { return m_deltaTime; }
-    float getFixedDeltaTime() const { return 1.0f / m_targetUPS; }
+    float getFixedDeltaTime() const { return 1.0f / m_targetFPS; }
     double getTotalTime() const { return m_totalTime; }
 
     // Constants
@@ -30,7 +30,6 @@ public:
     static const int GAME_HEIGHT;
     static const int GAME_SCALE_FACTOR;
     static const int TARGET_FPS;
-    static const int TARGET_UPS; // updates/ticks per second
 
 private:
     void updateScalingRects();
@@ -44,7 +43,6 @@ private:
 
     // Core properties
     int m_targetFPS;
-    int m_targetUPS;
     bool m_isRunning;
     int m_windowWidth;
     int m_windowHeight;

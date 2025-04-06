@@ -1,0 +1,34 @@
+{
+    // command : {name, command, time (optional), bufferTime (optional)}
+    // name : name of the command
+    // command : command sequence
+    // time : time to execute the command in frames (optional, default is 15)
+    // bufferTime : time to keep the executed command in buffer in frames (optional, default is 1)
+    "commands": [
+        {
+            "name": "Shoryuken1", // move name
+            "command": "~F, D, DF, x", // command sequence
+            "time": 20 // time to execute the command in frames
+        },
+        {
+            "name": "Shoryuken2",
+            "command": "~F, D, DF, y",
+            "time": 20
+        },
+        {
+            "name": "Shoryuken3",
+            "command": "~F, D, DF, z",
+            "time": 20
+        },
+        {
+            "name": "Hadouken",
+            "command": "~D, DF, F, x",
+            "time": 30
+        },
+        {
+            "name": "Tatsumaki Senpukyaku",
+            "command": "~D, DB, B, a",
+            "time": 25
+        }
+    ]
+}
