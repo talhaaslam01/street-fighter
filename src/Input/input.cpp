@@ -5,6 +5,7 @@
 
 // Maximum time for a button press/release in Ms (10 seconds)
 const float Input::MAX_TIME = 10000.0f;
+const int Input::SIMULTANEOUS_WINDOW_FRAMES = 5;
 
 InputBuffer::InputBuffer(int capacity)
     : m_maxCapacity(capacity)
@@ -19,13 +20,13 @@ void InputBuffer::addFrame(const std::unordered_map<Direction, InputState> &dire
     InputFrame frame;
     frame.directionStates = directionStates;
     frame.buttonStates = buttonStates;
-    frame.timestamp = static_cast<float>(gameTime * 1000); // Convert to Ms
+    frame.timestampMs = static_cast<float>(gameTime * 1000);
 
     // Add to buffer at the front (most recent frame)
     m_buffer.push_front(frame);
 
     // Remove frames which are older than 1 second
-    while (!m_buffer.empty() && (frame.timestamp - m_buffer.back().timestamp) >= 1000.0f)
+    while (!m_buffer.empty() && (frame.timestampMs - m_buffer.back().timestampMs) >= 1000.0f)
     {
         m_buffer.pop_back(); // Remove the oldest frame from the back
     }
@@ -37,8 +38,7 @@ void InputBuffer::addFrame(const std::unordered_map<Direction, InputState> &dire
     }
 }
 
-Input::Input(const char *characterName, const int targetFPS)
-    : m_ticksMs(1.0f / targetFPS * 1000.0f)
+Input::Input(const char *characterName)
 {
     m_directionStates[Direction::N] = InputState();
     m_directionStates[Direction::U] = InputState();
@@ -62,11 +62,10 @@ Input::Input(const char *characterName, const int targetFPS)
 
     m_currentDirection = Direction::N;
 
-    CommandParser parser(targetFPS);
-    parser.parseCommandFile(std::string(characterName), *this);
+    CommandParser::parseCommandFile(std::string(characterName), *this);
 }
 
-void Input::update(float dt, double totalTime)
+void Input::update(const float dt, const double totalTime)
 {
     updateInputStates(dt);
 
@@ -84,31 +83,31 @@ void Input::registerCommand(const CommandDefinition &command)
 
 bool Input::isCommandTriggered(const std::string &commandName) const
 {
-    auto it = activeCommands.find(commandName);
-    return it != activeCommands.end() && it->second > 0;
+    auto it = m_activeCommandsTimeLeftMs.find(commandName);
+    return it != m_activeCommandsTimeLeftMs.end() && it->second > 0;
 }
 
-bool Input::isButtonPressed(Button button) const
+bool Input::isButtonPressed(const Button button) const
 {
     auto it = m_buttonStates.find(button);
     return it != m_buttonStates.end() && it->second.isPressed;
 }
 
-bool Input::isButtonJustPressed(Button button) const
+bool Input::isButtonJustPressed(const Button button) const
 {
     auto it = m_buttonStates.find(button);
     return it != m_buttonStates.end() && it->second.isPressed && !it->second.wasPressed;
 }
 
-bool Input::isButtonJustReleased(Button button) const
+bool Input::isButtonJustReleased(const Button button) const
 {
     auto it = m_buttonStates.find(button);
     return it != m_buttonStates.end() && !it->second.isPressed && it->second.wasPressed;
 }
 
-void Input::updateInputStates(float dt)
+void Input::updateInputStates(const float dt)
 {
-    const float dtMs = dt * 1000; // Convert to Ms
+    const float dtMs = dt * 1000;
 
     // TODO: use config file to map keys to buttons and directions and handle character facing
     // Read current keyboard state
@@ -147,33 +146,33 @@ void Input::updateInputStates(float dt)
         // update timings
         if (isCurrentDirection)
         {
-            pair.second.releasedTime = 0;
-            pair.second.pressedTime = std::min(pair.second.pressedTime + dtMs, MAX_TIME);
+            pair.second.releasedTimeMs = 0.0f;
+            pair.second.pressedTimeMs = std::min(pair.second.pressedTimeMs + dtMs, MAX_TIME);
         }
         else
         {
-            pair.second.pressedTime = 0;
-            pair.second.releasedTime = std::min(pair.second.releasedTime + dtMs, MAX_TIME);
+            pair.second.pressedTimeMs = 0.0f;
+            pair.second.releasedTimeMs = std::min(pair.second.releasedTimeMs + dtMs, MAX_TIME);
         }
     }
 
     m_currentDirection = newDirection;
 
     // Update button states
-    updateButtonState(Button::x, IsKeyPressed(KEY_Z), dtMs); // Z key for X button
-    updateButtonState(Button::y, IsKeyPressed(KEY_X), dtMs); // X key for Y button
-    updateButtonState(Button::z, IsKeyPressed(KEY_C), dtMs); // C key for Z button
-    updateButtonState(Button::a, IsKeyPressed(KEY_A), dtMs); // A key for A button
-    updateButtonState(Button::b, IsKeyPressed(KEY_S), dtMs); // S key for B button
-    updateButtonState(Button::c, IsKeyPressed(KEY_D), dtMs); // D key for C button
+    updateButtonState(Button::x, IsKeyPressed(KEY_A), dtMs); // Z key for X button
+    updateButtonState(Button::y, IsKeyPressed(KEY_S), dtMs); // X key for Y button
+    updateButtonState(Button::z, IsKeyPressed(KEY_D), dtMs); // C key for Z button
+    updateButtonState(Button::a, IsKeyPressed(KEY_Z), dtMs); // A key for A button
+    updateButtonState(Button::b, IsKeyPressed(KEY_X), dtMs); // S key for B button
+    updateButtonState(Button::c, IsKeyPressed(KEY_C), dtMs); // D key for C button
 
     // Decrement buffer times for active commands
-    for (auto it = activeCommands.begin(); it != activeCommands.end();)
+    for (auto it = m_activeCommandsTimeLeftMs.begin(); it != m_activeCommandsTimeLeftMs.end();)
     {
         it->second -= dtMs; // Decrement by the time since last frame
         if (it->second <= 0)
         {
-            it = activeCommands.erase(it);
+            it = m_activeCommandsTimeLeftMs.erase(it);
         }
         else
         {
@@ -182,7 +181,7 @@ void Input::updateInputStates(float dt)
     }
 }
 
-void Input::updateButtonState(Button button, bool isPressed, float dtMs)
+void Input::updateButtonState(const Button button, const bool isPressed, const float dtMs)
 {
     InputState &state = m_buttonStates[button];
     state.wasPressed = state.isPressed; // Save previous state
@@ -190,17 +189,17 @@ void Input::updateButtonState(Button button, bool isPressed, float dtMs)
 
     if (state.isPressed)
     {
-        state.pressedTime = std::min(state.pressedTime + dtMs, MAX_TIME);
-        state.releasedTime = 0;
+        state.pressedTimeMs = std::min(state.pressedTimeMs + dtMs, MAX_TIME);
+        state.releasedTimeMs = 0.0f;
     }
     else
     {
-        state.pressedTime = 0;
-        state.releasedTime = std::min(state.releasedTime + dtMs, MAX_TIME);
+        state.pressedTimeMs = 0.0f;
+        state.releasedTimeMs = std::min(state.releasedTimeMs + dtMs, MAX_TIME);
     }
 }
 
-void Input::checkCommands(double totalTime)
+void Input::checkCommands(const double totalTime)
 {
     // Go through each registered command
     for (const auto &command : m_commands)
@@ -210,24 +209,24 @@ void Input::checkCommands(double totalTime)
         // If command detected, add to active commands list
         if (detected)
         {
-            activeCommands[command.name] = command.bufferTime;
+            m_activeCommandsTimeLeftMs[command.name] = command.bufferTimeMs;
         }
     }
 }
 
-bool Input::detectCommand(const CommandDefinition &command, double totalTime)
+bool Input::detectCommand(const CommandDefinition &command, const double totalTime)
 {
-    float timeWindow = command.time;
-    float currentTime = static_cast<float>(totalTime * 1000); // Get current time in Ms
+    float timeWindowMs = command.timeMs;
+    float currentTimeMs = static_cast<float>(totalTime * 1000);
 
     // Get the buffer frames within the command time window
     const auto &buffer = m_inputBuffer.getBuffer();
 
     // Find the first frame that's outside the time window (going from most recent to oldest)
     auto timeWindowEnd = std::find_if(buffer.begin(), buffer.end(),
-                                      [currentTime, timeWindow](const InputFrame &frame)
+                                      [currentTimeMs, timeWindowMs](const InputFrame &frame)
                                       {
-                                          return (currentTime - frame.timestamp) > timeWindow;
+                                          return (currentTimeMs - frame.timestampMs) > timeWindowMs;
                                       });
 
     // Calculate number of frames within the time window
@@ -243,7 +242,7 @@ bool Input::detectCommand(const CommandDefinition &command, double totalTime)
     return matchSequence(command.sequence, buffer, framesInWindow);
 }
 
-bool Input::matchSequence(const std::vector<InputSymbol> &sequence, const std::deque<InputFrame> &buffer, int framesWindow)
+bool Input::matchSequence(const std::vector<InputSymbol> &sequence, const std::deque<InputFrame> &buffer, const int framesWindow)
 {
     if (sequence.empty() || buffer.empty())
     {
@@ -364,7 +363,7 @@ bool Input::matchSymbol(const InputSymbol &symbol, const InputFrame &frame)
             else if (dirIt != frame.directionStates.end())
             {
                 matched = !dirIt->second.isPressed && dirIt->second.wasPressed &&
-                          (symbol.requiredHoldTime == 0 || dirIt->second.releasedTime >= symbol.requiredHoldTime);
+                          (symbol.requiredHoldTimeMs <= 0.0f || dirIt->second.releasedTimeMs >= symbol.requiredHoldTimeMs);
             }
         }
         // handle 4-way press ($)
@@ -409,7 +408,6 @@ bool Input::matchSymbol(const InputSymbol &symbol, const InputFrame &frame)
         if (hasFlag(symbol.modifier, InputModifier::SIMULTANEOUS))
         {
             // Check simultaneous button presses with relaxation window
-            const int SIMULTANEOUS_WINDOW_FRAMES = 4; // 4 frames relaxation window
 
             // First check if all required buttons are currently pressed
             bool allButtonsPressed = true;
@@ -444,16 +442,16 @@ bool Input::matchSymbol(const InputSymbol &symbol, const InputFrame &frame)
 
                 for (Button btn : requiredButtons)
                 {
-                    float pressTime = frame.buttonStates.at(btn).pressedTime;
+                    float pressTime = frame.buttonStates.at(btn).pressedTimeMs;
                     earliestPressTime = std::min(earliestPressTime, pressTime);
                     latestPressTime = std::max(latestPressTime, pressTime);
                 }
 
                 // Convert frame relaxation to milliseconds using tick time
-                float maxAllowedDifference = SIMULTANEOUS_WINDOW_FRAMES * m_ticksMs;
+                float maxAllowedDifferenceMs = SIMULTANEOUS_WINDOW_FRAMES * FRAME_TIME_MS;
 
                 // Compare time difference between earliest and latest button press
-                matched = (latestPressTime - earliestPressTime) <= maxAllowedDifference;
+                matched = (latestPressTime - earliestPressTime) <= maxAllowedDifferenceMs;
             }
 
             return matched;
@@ -467,7 +465,7 @@ bool Input::matchSymbol(const InputSymbol &symbol, const InputFrame &frame)
                 if (hasFlag(symbol.modifier, InputModifier::RELEASE))
                 {
                     return !btnIt->second.isPressed && btnIt->second.wasPressed &&
-                           (symbol.requiredHoldTime == 0 || btnIt->second.releasedTime >= symbol.requiredHoldTime);
+                           (symbol.requiredHoldTimeMs <= 0.0f || btnIt->second.releasedTimeMs >= symbol.requiredHoldTimeMs);
                 }
                 else
                 {
@@ -489,8 +487,8 @@ bool Input::match4WayRelease(const InputSymbol &symbol, const InputFrame &frame)
     auto isDirReleasedOnTime = [](const Direction dir, const InputFrame &frame, const InputSymbol &symbol)
     {
         return !frame.directionStates.at(dir).isPressed && frame.directionStates.at(dir).wasPressed &&
-               (symbol.requiredHoldTime <= 0.0f ||
-                frame.directionStates.at(dir).releasedTime >= symbol.requiredHoldTime);
+               (symbol.requiredHoldTimeMs <= 0.0f ||
+                frame.directionStates.at(dir).releasedTimeMs >= symbol.requiredHoldTimeMs);
     };
 
     if (dirToCheck == Direction::U)
@@ -645,7 +643,7 @@ void Input::imGuiDebugRender()
 {
     std::string commands = "";
 
-    for (const auto &command : activeCommands)
+    for (const auto &command : m_activeCommandsTimeLeftMs)
     {
         commands += command.first + ", ";
     }

@@ -1,21 +1,13 @@
+#include "common.h"
 #include "Game.h"
-#include <iostream>
 
-const char *Game::WINDOW_TITLE = "Street Fighter 2";
-const int Game::GAME_WIDTH = 384;
-const int Game::GAME_HEIGHT = 224;
-const int Game::GAME_SCALE_FACTOR = 3;
-const int Game::TARGET_FPS = 60;
+#include "imgui.h"
+#include "rlImGui.h"
 
 Game::Game()
-    : m_targetFPS(TARGET_FPS),
-      m_isRunning(false),
+    : m_isRunning(false),
       m_windowWidth(GAME_WIDTH * GAME_SCALE_FACTOR),
       m_windowHeight(GAME_HEIGHT * GAME_SCALE_FACTOR),
-      m_windowTitle(WINDOW_TITLE),
-      m_deltaTime(0.0f),
-      m_totalTime(0.0),
-      m_accumulator(0.0),
       m_stage("Suzaku Castle"),
       m_camera(GAME_WIDTH, GAME_HEIGHT, m_stage.getBounds()),
       m_player1(GAME_WIDTH, GAME_HEIGHT, true, m_stage, m_camera.getCamera()),
@@ -36,9 +28,9 @@ void Game::initialize()
 
     // Initialize raylib window
     SetConfigFlags(FLAG_WINDOW_RESIZABLE | FLAG_WINDOW_MAXIMIZED);
-    InitWindow(m_windowWidth, m_windowHeight, m_windowTitle);
+    InitWindow(m_windowWidth, m_windowHeight, "Street Fighter 2");
     SetWindowMinSize(GAME_WIDTH, GAME_HEIGHT);
-    SetTargetFPS(m_targetFPS);
+    SetTargetFPS(FPS);
 
     // Initialize raylib audio device
     InitAudioDevice();
@@ -95,7 +87,10 @@ void Game::run()
         initialize();
     }
 
-    const float fixedDt = getFixedDeltaTime();
+    // Time tracking
+    float deltaTime = 0.0f;
+    double totalTime = 0.0;
+    double accumulator = 0.0;
 
     // game loop
     while (!WindowShouldClose() && m_isRunning)
@@ -108,10 +103,10 @@ void Game::run()
         }
 
         // Calculate delta time
-        m_deltaTime = GetFrameTime();
-        if (m_deltaTime > 0.25)
+        deltaTime = GetFrameTime();
+        if (deltaTime > 0.25)
         {
-            m_deltaTime = 0.25;
+            deltaTime = 0.25;
         }
 
         // process input
@@ -120,24 +115,24 @@ void Game::run()
         if (!m_isPaused || m_stepFrame) // Allow updates if not paused or stepping
         {
             // Update elapsed time
-            m_totalTime += m_deltaTime;
+            totalTime += deltaTime;
 
             // Update game logic
-            update(m_deltaTime);
+            update(deltaTime);
 
             // Accumulator for fixed timestep
-            m_accumulator += m_deltaTime;
+            accumulator += deltaTime;
 
             // Fixed update for physics
-            while (m_accumulator >= fixedDt)
+            while (accumulator >= FRAME_TIME)
             {
-                fixedUpdate(fixedDt);
-                m_accumulator -= fixedDt;
+                fixedUpdate(FRAME_TIME);
+                accumulator -= FRAME_TIME;
             }
         }
 
         // Render frame
-        const float alpha = m_accumulator / fixedDt;
+        const float alpha = accumulator / FRAME_TIME;
         render(alpha);
 
         if (m_stepFrame)
@@ -163,18 +158,18 @@ void Game::shutdown()
 void Game::processInput()
 {
     // current scene process input
-    if (IsKeyPressed(KEY_P))
+    if (IsKeyPressed(KEY_F10))
     {
         m_isPaused = !m_isPaused;
     }
 
-    if (IsKeyPressed(KEY_N) && m_isPaused)
+    if (IsKeyPressed(KEY_F11) && m_isPaused)
     {
         m_stepFrame = true;
     }
 }
 
-void Game::update(float dt)
+void Game::update(const float dt)
 {
     // current scene update
     m_stage.update(dt);
@@ -182,7 +177,7 @@ void Game::update(float dt)
     m_player1.update(dt);
 }
 
-void Game::fixedUpdate(float fixedDt)
+void Game::fixedUpdate(const float fixedDt)
 {
     // current scene fixed update
     m_player1.fixedUpdate(fixedDt);
@@ -238,10 +233,10 @@ void Game::imGuiDebugRender()
         ImGui::Text("Window Size: %d x %d", m_windowWidth, m_windowHeight);
         ImGui::Text("Game aspect ratio: %.3f", static_cast<float>(GAME_WIDTH) / GAME_HEIGHT);
         ImGui::Text("Window aspect ratio: %.3f", static_cast<float>(m_windowWidth) / m_windowHeight);
-        ImGui::Text("Time: %.3f", m_totalTime);
+        ImGui::Text("Time: %.3f", GetTime());
         ImGui::Text("FPS: %d", GetFPS());
-        ImGui::Text("Delta Time: %.6f", m_deltaTime);
-        ImGui::Text("Fixed Delta Time: %.6f", getFixedDeltaTime());
+        ImGui::Text("Delta Time: %.6f", GetFrameTime());
+        ImGui::Text("Fixed Delta Time: %.6f", FRAME_TIME);
         ImGui::Text("Paused: %s", m_isPaused ? "true" : "false");
     }
     ImGui::End();

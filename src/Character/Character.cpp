@@ -10,7 +10,7 @@ Character::Character(const int gameWidth, const int gameHeight, const bool isPla
       m_stage(stage),
       m_camera(camera),
       m_currentState(CharacterState::STANDING),
-      m_input("ryu", 60),
+      m_input("ryu"),
       m_currentAnimation(Action::STANDING),
       m_currentAnimFrame(0),
       m_animTimer(0.0f),

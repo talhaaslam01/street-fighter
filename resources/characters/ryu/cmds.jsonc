@@ -41,14 +41,19 @@
             "time": 30
         },
         {
-            "name": "5b",
-            "command": "b, b, b, b, b",
-            "time": 30
+            "name": "3b",
+            "command": "b, b, b",
+            "time": 60
         },
         {
             "name": "strict a",
             "command": "a, >~a",
             "time": 5
+        },
+        {
+            "name": "D_C",
+            "command": "/$D, c",
+            "time": 3
         }
     ]
 }

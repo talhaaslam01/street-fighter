@@ -1,11 +1,7 @@
+#include "../common.h"
 #include "parser.h"
 
 using json = nlohmann::json;
-
-CommandParser::CommandParser(int targetFPS)
-    : m_targetFPS(targetFPS)
-{
-}
 
 bool CommandParser::parseCommandFile(const std::string &characterName, Input &input)
 {
@@ -30,7 +26,7 @@ CommandDefinition CommandParser::parseCommandSection(const json &command)
     int time = command.value("time", 0);
     int bufferTime = command.value("bufferTime", 0);
 
-    CommandDefinition cmd(name, m_targetFPS, time, bufferTime);
+    CommandDefinition cmd(name, time, bufferTime);
 
     std::vector<InputSymbol> sequence = parseCommandSequence(commandStr);
     for (const auto &symbol : sequence)
@@ -111,7 +107,7 @@ InputSymbol CommandParser::parseInputSymbol(const std::string &symbolStr)
 
         if (i > 0)
         {
-            symbol.requiredHoldTime = std::stoi(str.substr(0, i)) / static_cast<float>(m_targetFPS) * 1000.0f;
+            symbol.requiredHoldTimeMs = std::stoi(str.substr(0, i)) / static_cast<float>(FPS) * 1000.0f;
             str.erase(0, i); // Remove the number
         }
     }

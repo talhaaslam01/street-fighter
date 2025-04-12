@@ -1,5 +1,7 @@
 #pragma once
 
+#include "../common.h"
+
 #include "raylib.h"
 
 #include <deque>
@@ -92,18 +94,19 @@ inline bool hasFlag(InputModifier flags, InputModifier flag)
 }
 
 // Structure to hold a single input symbol
+// When read through parser, button var may hold multiple buttons as flags like a+b
 struct InputSymbol
 {
     Direction direction;
     Button button;
     InputModifier modifier;
-    float requiredHoldTime; // Required hold time in Ms
+    float requiredHoldTimeMs;
 
     InputSymbol()
         : direction(Direction::N),
           button(Button::n),
           modifier(InputModifier::NONE),
-          requiredHoldTime(0.0f) {}
+          requiredHoldTimeMs(0.0f) {}
 
     bool isDirectional() const { return button == Button::n; }
     bool isButton() const { return direction == Direction::N; }
@@ -115,18 +118,18 @@ struct CommandDefinition
 {
     std::string name;
     std::vector<InputSymbol> sequence;
-    float time;       // Time to complete the command in Ms
-    float bufferTime; // How long the command is buffered after successful execution in Ms
+    float timeMs;       // Time to complete the command
+    float bufferTimeMs; // How long the command is buffered after successful execution
 
     static const int DEFAULT_TIME = 15;       // Default time for a command in frames
     static const int DEFAULT_BUFFER_TIME = 1; // Default buffer time in frames
 
     CommandDefinition()
         : name(""),
-          time(0),
-          bufferTime(0) {}
+          timeMs(0.0f),
+          bufferTimeMs(0.0f) {}
 
-    CommandDefinition(std::string name, int targetFps, int time, int bufferTime)
+    CommandDefinition(std::string name, int time, int bufferTime)
         : name(name)
     {
         if (time == 0)
@@ -134,8 +137,8 @@ struct CommandDefinition
         if (bufferTime == 0)
             bufferTime = DEFAULT_BUFFER_TIME;
 
-        this->time = static_cast<float>(time) / targetFps * 1000.0f;             // Default 15 frames at target FPS
-        this->bufferTime = static_cast<float>(bufferTime) / targetFps * 1000.0f; // Default 1 frame at target FPS
+        this->timeMs = static_cast<float>(time) / FPS * 1000.0f;             // Default 15 frames at target FPS
+        this->bufferTimeMs = static_cast<float>(bufferTime) / FPS * 1000.0f; // Default 1 frame at target FPS
     }
 
     void addSymbol(const InputSymbol &symbol)
@@ -149,8 +152,8 @@ struct InputState
 {
     bool isPressed = false;
     bool wasPressed = false;
-    float pressedTime = 0;  // How long has it been pressed in Ms
-    float releasedTime = 0; // How long since it was released in Ms
+    float pressedTimeMs = 0;  // How long has it been pressed
+    float releasedTimeMs = 0; // How long since it was released
 };
 
 // Structure to hold a single input frame
@@ -158,7 +161,7 @@ struct InputFrame
 {
     std::unordered_map<Direction, InputState> directionStates;
     std::unordered_map<Button, InputState> buttonStates; // individual button states
-    float timestamp;                                     // Timestamp of the frame in Ms
+    float timestampMs;                                   // Timestamp of the frame
 };
 
 // Class to store and manage the input history
@@ -193,11 +196,11 @@ private:
 class Input
 {
 public:
-    Input(const char *characterName, const int targetFPS);
+    Input(const char *characterName);
     ~Input() = default;
 
     // Update input states and buffer them
-    void update(float dt, double totalTime);
+    void update(const float dt, const double totalTime);
 
     // Register a command to be detected
     void registerCommand(const CommandDefinition &command);
@@ -206,36 +209,37 @@ public:
     bool isCommandTriggered(const std::string &commandName) const;
 
     // Check if a button is pressed
-    bool isButtonPressed(Button button) const;
+    bool isButtonPressed(const Button button) const;
 
     // Check if a button was just pressed this frame
-    bool isButtonJustPressed(Button button) const;
+    bool isButtonJustPressed(const Button button) const;
 
     // Check if a button was just released this frame
-    bool isButtonJustReleased(Button button) const;
+    bool isButtonJustReleased(const Button button) const;
 
     Direction getCurrentDirection() const { return m_currentDirection; }
 
     // Render debug information
     void imGuiDebugRender();
 
-    static const float MAX_TIME; // Maximum time for a button press/release in Ms
+    static const float MAX_TIME;                 // Maximum time for a button press/release in Ms
+    static const int SIMULTANEOUS_WINDOW_FRAMES; // Simultaneous input relaxation window in frames
 
 private:
     // Update input states based on current input
-    void updateInputStates(float dt);
+    void updateInputStates(const float dt);
 
     // Helper to update a button state
-    void updateButtonState(Button button, bool isPressed, float dtInMs);
+    void updateButtonState(const Button button, const bool isPressed, const float dtMs);
 
     // Check for command sequences
-    void checkCommands(double totalTime);
+    void checkCommands(const double totalTime);
 
     // Check if a specific command has been input
-    bool detectCommand(const CommandDefinition &command, double totalTime);
+    bool detectCommand(const CommandDefinition &command, const double totalTime);
 
     // Match a command sequence against the input buffer
-    bool matchSequence(const std::vector<InputSymbol> &sequence, const std::deque<InputFrame> &buffer, int framesWindow);
+    bool matchSequence(const std::vector<InputSymbol> &sequence, const std::deque<InputFrame> &buffer, const int framesWindow);
 
     // Helper function to match a single symbol against a frame
     bool matchSymbol(const InputSymbol &symbol, const InputFrame &frame);
@@ -252,11 +256,9 @@ private:
 
     InputBuffer m_inputBuffer;
     std::vector<CommandDefinition> m_commands;
-    std::unordered_map<std::string, float> activeCommands; // Active commands and buffer time left in Ms
+    std::unordered_map<std::string, float> m_activeCommandsTimeLeftMs;
 
     std::unordered_map<Direction, InputState> m_directionStates;
     std::unordered_map<Button, InputState> m_buttonStates;
     Direction m_currentDirection;
-
-    const float m_ticksMs; // Time required for 1 tick/frame in ms
 };
