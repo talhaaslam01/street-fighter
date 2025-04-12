@@ -10,6 +10,7 @@ Character::Character(const int gameWidth, const int gameHeight, const bool isPla
       m_stage(stage),
       m_camera(camera),
       m_currentState(CharacterState::STANDING),
+      m_input("ryu", 60),
       m_currentAnimation(Action::STANDING),
       m_currentAnimFrame(0),
       m_animTimer(0.0f),
@@ -40,6 +41,8 @@ void Character::initialize()
 
 void Character::update(float dt)
 {
+    m_input.update(dt, GetTime());
+
     // Update character logic
     m_animTimer += dt;
 
@@ -62,45 +65,45 @@ void Character::update(float dt)
         }
     }
 
-    // Handle input for simple state changes
-    // TEMPORARY
-    if (m_currentState == CharacterState::STANDING)
-    {
-        if (IsKeyDown(m_isPlayer1 ? KEY_RIGHT : KEY_D))
-        {
-            m_currentState = CharacterState::WALKING_FORWARD;
-            m_currentAnimation = Action::WALKING_FORWARD;
-            m_currentAnimFrame = 0;
-            m_animTimer = 0.0f;
-        }
-        else if (IsKeyDown(m_isPlayer1 ? KEY_LEFT : KEY_A))
-        {
-            m_currentState = CharacterState::WALKING_BACKWARD;
-            m_currentAnimation = Action::WALKING_BACKWARD;
-            m_currentAnimFrame = 0;
-            m_animTimer = 0.0f;
-        }
-    }
-    else if (m_currentState == CharacterState::WALKING_FORWARD)
-    {
-        if (!IsKeyDown(m_isPlayer1 ? KEY_RIGHT : KEY_D))
-        {
-            m_currentState = CharacterState::STANDING;
-            m_currentAnimation = Action::STANDING;
-            m_currentAnimFrame = 0;
-            m_animTimer = 0.0f;
-        }
-    }
-    else if (m_currentState == CharacterState::WALKING_BACKWARD)
-    {
-        if (!IsKeyDown(m_isPlayer1 ? KEY_LEFT : KEY_A))
-        {
-            m_currentState = CharacterState::STANDING;
-            m_currentAnimation = Action::STANDING;
-            m_currentAnimFrame = 0;
-            m_animTimer = 0.0f;
-        }
-    }
+    // // Handle input for simple state changes
+    // // TEMPORARY
+    // if (m_currentState == CharacterState::STANDING)
+    // {
+    //     if (IsKeyDown(m_isPlayer1 ? KEY_RIGHT : KEY_D))
+    //     {
+    //         m_currentState = CharacterState::WALKING_FORWARD;
+    //         m_currentAnimation = Action::WALKING_FORWARD;
+    //         m_currentAnimFrame = 0;
+    //         m_animTimer = 0.0f;
+    //     }
+    //     else if (IsKeyDown(m_isPlayer1 ? KEY_LEFT : KEY_A))
+    //     {
+    //         m_currentState = CharacterState::WALKING_BACKWARD;
+    //         m_currentAnimation = Action::WALKING_BACKWARD;
+    //         m_currentAnimFrame = 0;
+    //         m_animTimer = 0.0f;
+    //     }
+    // }
+    // else if (m_currentState == CharacterState::WALKING_FORWARD)
+    // {
+    //     if (!IsKeyDown(m_isPlayer1 ? KEY_RIGHT : KEY_D))
+    //     {
+    //         m_currentState = CharacterState::STANDING;
+    //         m_currentAnimation = Action::STANDING;
+    //         m_currentAnimFrame = 0;
+    //         m_animTimer = 0.0f;
+    //     }
+    // }
+    // else if (m_currentState == CharacterState::WALKING_BACKWARD)
+    // {
+    //     if (!IsKeyDown(m_isPlayer1 ? KEY_LEFT : KEY_A))
+    //     {
+    //         m_currentState = CharacterState::STANDING;
+    //         m_currentAnimation = Action::STANDING;
+    //         m_currentAnimFrame = 0;
+    //         m_animTimer = 0.0f;
+    //     }
+    // }
 }
 
 void Character::fixedUpdate(float fixedDt)
@@ -184,6 +187,7 @@ void Character::imGuiDebugRender()
             m_facingDirection = (m_facingDirection == 1) ? -1 : 1;
         }
         ImGui::Text("Facing Direction: %d", m_facingDirection);
+        m_input.imGuiDebugRender();
     }
     ImGui::End();
 }

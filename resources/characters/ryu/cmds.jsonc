@@ -11,16 +11,6 @@
             "time": 20 // time to execute the command in frames
         },
         {
-            "name": "Shoryuken2",
-            "command": "~F, D, DF, y",
-            "time": 20
-        },
-        {
-            "name": "Shoryuken3",
-            "command": "~F, D, DF, z",
-            "time": 20
-        },
-        {
             "name": "Hadouken",
             "command": "~D, DF, F, x",
             "time": 30
@@ -29,6 +19,36 @@
             "name": "Tatsumaki Senpukyaku",
             "command": "~D, DB, B, a",
             "time": 25
+        },
+        {
+            "name": "dash",
+            "command": "F, F",
+            "time": 10
+        },
+        {
+            "name": "throw",
+            "command": "a+x",
+            "time": 5
+        },
+        {
+            "name": "sonic boom",
+            "command": "~30$B, F, x",
+            "time": 10
+        },
+        {
+            "name": "shiku hadouken",
+            "command": "~D, DF, F, D, DF, F, x",
+            "time": 30
+        },
+        {
+            "name": "5b",
+            "command": "b, b, b, b, b",
+            "time": 30
+        },
+        {
+            "name": "strict a",
+            "command": "a, >~a",
+            "time": 5
         }
     ]
 }

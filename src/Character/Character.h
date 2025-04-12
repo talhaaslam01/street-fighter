@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../Input/input.h"
 #include "../Stage/Stage.h"
 #include "Animation.h"
 #include "SpriteSheet.h"
@@ -50,6 +51,7 @@ private:
     CharacterState m_currentState;
     SpriteSheetManager m_spriteSheetManager;
     AnimationsManager m_animationsManager;
+    Input m_input;
 
     Action m_currentAnimation;
     int m_currentAnimFrame;

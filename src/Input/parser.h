@@ -29,10 +29,10 @@ private:
     InputSymbol parseInputSymbol(const std::string &symbolStr);
 
     // Convert a direction string to Direction enum
-    Direction parseDirection(const char dirCh);
+    Direction parseDirection(const std::string &dirStr);
 
     // Convert a button string to Button enum
-    Button parseButton(const char buttonCh);
+    Button parseButton(const std::string &buttonStr);
 
     // Helper function to trim whitespace from strings
     std::string trim(const std::string &str);

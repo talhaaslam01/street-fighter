@@ -111,7 +111,7 @@ InputSymbol CommandParser::parseInputSymbol(const std::string &symbolStr)
 
         if (i > 0)
         {
-            symbol.requiredHoldTime = std::stoi(str.substr(0, i)) / static_cast<float>(m_targetFPS);
+            symbol.requiredHoldTime = std::stoi(str.substr(0, i)) / static_cast<float>(m_targetFPS) * 1000.0f;
             str.erase(0, i); // Remove the number
         }
     }
@@ -137,14 +137,15 @@ InputSymbol CommandParser::parseInputSymbol(const std::string &symbolStr)
         {
             if (ch != '+')
             {
-                symbol.button |= parseButton(ch);
+                std::string buttonStr(1, ch);
+                symbol.button |= parseButton(buttonStr);
             }
         }
     }
     else
     {
-        Button b = parseButton(str[0]);
-        Direction d = parseDirection(str[0]);
+        Button b = parseButton(str);
+        Direction d = parseDirection(str);
 
         if (b != Button::n)
         {
@@ -155,47 +156,49 @@ InputSymbol CommandParser::parseInputSymbol(const std::string &symbolStr)
             symbol.direction = d;
         }
     }
+
+    return symbol;
 }
 
-Direction CommandParser::parseDirection(const char dirCh)
+Direction CommandParser::parseDirection(const std::string &dirStr)
 {
-    if (dirCh == 'U')
+    if (dirStr == "U")
         return Direction::U;
-    if (dirCh == 'D')
+    if (dirStr == "D")
         return Direction::D;
-    if (dirCh == 'B')
+    if (dirStr == "B")
         return Direction::B;
-    if (dirCh == 'F')
+    if (dirStr == "F")
         return Direction::F;
-    if (dirCh == 'UB')
+    if (dirStr == "UB")
         return Direction::UB;
-    if (dirCh == 'UF')
+    if (dirStr == "UF")
         return Direction::UF;
-    if (dirCh == 'DB')
+    if (dirStr == "DB")
         return Direction::DB;
-    if (dirCh == 'DF')
+    if (dirStr == "DF")
         return Direction::DF;
 
     return Direction::N; // Default to neutral
 }
 
-Button CommandParser::parseButton(const char buttonCh)
+Button CommandParser::parseButton(const std::string &buttonStr)
 {
-    if (buttonCh == 'x')
+    if (buttonStr == "x")
         return Button::x;
-    if (buttonCh == 'y')
+    if (buttonStr == "y")
         return Button::y;
-    if (buttonCh == 'z')
+    if (buttonStr == "z")
         return Button::z;
-    if (buttonCh == 'a')
+    if (buttonStr == "a")
         return Button::a;
-    if (buttonCh == 'b')
+    if (buttonStr == "b")
         return Button::b;
-    if (buttonCh == 'c')
+    if (buttonStr == "c")
         return Button::c;
-    if (buttonCh == 's')
+    if (buttonStr == "s")
         return Button::s;
-    if (buttonCh == 'o')
+    if (buttonStr == "o")
         return Button::o;
 
     return Button::n; // Default to no button
